@@ -1,0 +1,2345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cloud & DevOps Explorer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Syne:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --surface: #111318;
+  --surface2: #181b22;
+  --border: rgba(255,255,255,0.06);
+  --border2: rgba(255,255,255,0.12);
+  --text: #e8eaf0;
+  --muted: #6b7280;
+  --accent: #00d4ff;
+  --accent2: #7c3aed;
+  --accent3: #10b981;
+  --accent4: #f59e0b;
+  --accent5: #ef4444;
+  --accent6: #ec4899;
+  --mono: 'JetBrains Mono', monospace;
+  --sans: 'Syne', sans-serif;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--sans);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grid background */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(0,212,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,212,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Glow orbs */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: 0;
+}
+.orb1 { width: 400px; height: 400px; background: var(--accent); top: -100px; left: -100px; }
+.orb2 { width: 300px; height: 300px; background: var(--accent2); bottom: 100px; right: -50px; }
+
+@media (max-width: 600px) {
+  .orb { display: none; }
+}
+
+/* HEADER */
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: 
+    radial-gradient(at top left, rgba(0, 212, 255, 0.08) 0px, transparent 40%),
+    radial-gradient(at top right, rgba(124, 58, 237, 0.08) 0px, transparent 40%),
+    rgba(10, 12, 16, 0.85);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid var(--border2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Removed extra decorative elements for a cleaner look */
+
+
+@media (min-width: 1400px) {
+  header, .tabs-container, .main {
+    padding-left: calc((100vw - 1320px) / 2 + 24px);
+    padding-right: calc((100vw - 1320px) / 2 + 24px);
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 32px; height: 32px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 16px;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  color: var(--text);
+}
+
+.logo-text span { color: var(--accent); }
+
+.level-badge {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--accent);
+  background: rgba(0, 212, 255, 0.05);
+  border: 1px solid rgba(0, 212, 255, 0.2);
+  padding: 5px 12px;
+  border-radius: 6px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* HERO COMPACTED */
+.hero { display: none; }
+
+.header-main {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex: 1;
+  justify-content: center;
+}
+
+.header-title {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  letter-spacing: 0.5px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-title span { color: var(--accent); font-weight: 600; }
+
+
+/* CATEGORY TABS */
+.tabs-container {
+  position: relative;
+  z-index: 10;
+  padding: 16px 24px 8px;
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  max-width: 100%;
+  width: 100%;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  /* Visual indicator for overflow */
+  -webkit-mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+  mask-image: linear-gradient(to right, transparent 0%, black 5%, black 95%, transparent 100%);
+}
+
+@media (min-width: 900px) {
+  .tabs-container { -webkit-mask-image: none; mask-image: none; padding-bottom: 0; }
+}
+
+.tabs-container::-webkit-scrollbar {
+  display: none; /* Hide scrollbar Chrome/Safari */
+}
+
+.tab-btn {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+  padding: 8px 18px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.2s;
+  letter-spacing: 0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+  flex-shrink: 0; /* Important: don't let buttons squish */
+}
+
+.tab-btn:hover {
+  border-color: var(--border2);
+  color: var(--text);
+  background: var(--surface2);
+}
+
+.tab-btn.active {
+  background: var(--active-color, var(--accent));
+  border-color: transparent;
+  color: #000;
+  font-weight: 700;
+}
+
+.tab-dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.7;
+}
+
+/* MAIN LAYOUT */
+.main {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 20px;
+  padding: 20px 24px 40px;
+  min-height: calc(100vh - 120px);
+}
+
+/* CONCEPT LIST */
+.concept-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.concept-item {
+  padding: 14px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  cursor: pointer;
+  transition: all 0.18s;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.concept-item:hover {
+  border-color: var(--border2);
+  background: var(--surface2);
+  transform: translateX(2px);
+}
+
+.concept-item.active {
+  border-color: var(--item-color, var(--accent));
+  background: var(--surface2);
+  box-shadow: inset 3px 0 0 var(--item-color, var(--accent));
+}
+
+.concept-icon {
+  font-size: 20px;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.concept-meta { flex: 1; min-width: 0; }
+
+.concept-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 3px;
+  letter-spacing: -0.2px;
+}
+
+.concept-actions {
+  display: flex;
+  align-items: center;
+  opacity: 0;
+  transform: translateX(10px);
+  transition: all 0.25s;
+}
+
+.concept-item:hover .concept-actions,
+.concept-item.active .concept-actions {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+@media (max-width: 900px) {
+  .concept-actions { opacity: 1; transform: none; }
+}
+
+.concept-brief {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.concept-level {
+  font-family: var(--mono);
+  font-size: 9px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex-shrink: 0;
+  align-self: center;
+}
+
+.viz-trigger-btn {
+  background: var(--item-color, var(--accent));
+  color: #000;
+  border: none;
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+  position: relative;
+  overflow: hidden;
+}
+
+.viz-trigger-btn span { font-size: 12px; transition: transform 0.3s; }
+.viz-trigger-btn:hover span { transform: translateX(3px); }
+
+.viz-trigger-btn::after {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%; height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer { 0% { left: -100%; } 100% { left: 200%; } }
+
+@media (max-width: 600px) {
+  .concept-level { font-size: 0; width: 8px; height: 8px; padding: 0; border-radius: 50%; }
+}
+
+
+.level-b { background: rgba(16,185,129,0.15); color: var(--accent3); }
+.level-i { background: rgba(245,158,11,0.15); color: var(--accent4); }
+.level-a { background: rgba(239,68,68,0.15); color: var(--accent5); }
+.level-b.concept-level { background: var(--accent3); }
+.level-i.concept-level { background: var(--accent4); }
+.level-a.concept-level { background: var(--accent5); }
+
+/* ADVENTURE MODE STYLES */
+.adventure-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.adventure-btn:hover {
+  background: rgba(0, 212, 255, 0.1);
+  border-color: var(--accent);
+}
+
+.adventure-btn.active {
+  background: var(--accent);
+  color: #000;
+  border-color: transparent;
+  box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
+}
+
+.progress-banner {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.progress-info {
+  display: flex;
+  justify-content: space-between;
+  font-family: var(--mono);
+  font-size: 10px;
+  margin-bottom: 8px;
+  color: var(--muted);
+}
+
+.progress-bar-bg {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent), var(--accent2));
+  width: 0%;
+  transition: width 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.concept-item.completed {
+  opacity: 1;
+}
+
+.completion-check {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  color: transparent;
+  transition: all 0.3s;
+  flex-shrink: 0;
+}
+
+.concept-item.completed .completion-check {
+  background: var(--accent3);
+  border-color: var(--accent3);
+  color: #000;
+}
+
+.challenge-section {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border2);
+  border-radius: 12px;
+  padding: 24px;
+  margin-top: 32px;
+}
+
+.challenge-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.challenge-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.challenge-content {
+  font-size: 14px;
+  color: var(--text);
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+
+.quiz-options {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.quiz-option {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  padding: 12px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 13px;
+}
+
+.quiz-option:hover {
+  border-color: var(--muted);
+}
+
+.quiz-option.correct {
+  background: rgba(16, 185, 129, 0.1);
+  border-color: var(--accent3);
+  color: var(--accent3);
+}
+
+.quiz-option.wrong {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--accent5);
+  color: var(--accent5);
+}
+
+.complete-module-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #000;
+  border: none;
+  border-radius: 8px;
+  font-family: var(--sans);
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: all 0.3s;
+}
+
+.complete-module-btn:hover {
+  box-shadow: 0 0 30px rgba(0, 212, 255, 0.4);
+  transform: translateY(-2px);
+}
+
+.complete-module-btn.done {
+  background: var(--accent3);
+  cursor: default;
+  box-shadow: none;
+  transform: none;
+}
+
+/* DETAIL PANEL */
+.detail-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.detail-header {
+  padding: 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+}
+
+.detail-category {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--cat-color, var(--accent));
+  margin-bottom: 10px;
+}
+
+.detail-title {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  color: var(--text);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.detail-icon { font-size: 32px; }
+
+.detail-subtitle {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.detail-body {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* VISUALIZATION AREA */
+.viz-area {
+  background: rgba(10, 12, 16, 0.4);
+  border: 1px solid var(--border2);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  overflow: hidden;
+  position: relative;
+  min-height: 240px;
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 
+    0 10px 40px rgba(0,0,0,0.5),
+    inset 0 0 0 1px rgba(255,255,255,0.03);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  /* Added a subtle glow based on category color */
+}
+
+.viz-area::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 50%, var(--cat-color), transparent 80%);
+  opacity: 0.04;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.viz-area:hover {
+  transform: scale(1.005) translateY(-2px);
+  border-color: var(--cat-color);
+  box-shadow: 
+    0 12px 48px rgba(0,0,0,0.6),
+    0 0 20px -10px var(--cat-color);
+}
+
+.viz-label {
+  position: absolute;
+  top: 14px; right: 16px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  z-index: 2;
+  opacity: 0.6;
+}
+
+.viz-controls {
+  position: absolute;
+  bottom: 12px; right: 16px;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+}
+
+.viz-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: var(--muted);
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 14px;
+}
+
+.viz-btn:hover {
+  background: var(--cat-color);
+  color: #000;
+  border-color: transparent;
+}
+
+/* EXPLANATION */
+.explanation {
+  margin-bottom: 24px;
+  animation: fadein 0.4s ease-out;
+}
+
+.explanation h3 {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 10px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-family: var(--mono);
+}
+
+.explanation p {
+  font-size: 13px;
+  color: var(--muted);
+  line-height: 1.75;
+  margin-bottom: 10px;
+}
+
+/* KEY POINTS */
+.key-points {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.key-point {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--muted);
+  font-family: var(--mono);
+  line-height: 1.6;
+}
+
+.key-point::before {
+  content: '→';
+  color: var(--cat-color, var(--accent));
+  flex-shrink: 0;
+  font-weight: 700;
+  margin-top: 1px;
+}
+
+/* TOOLS STRIP */
+.tools-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 20px;
+}
+
+.tool-tag {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border2);
+  color: var(--text);
+  background: var(--surface2);
+  letter-spacing: 0.3px;
+}
+
+/* EMPTY STATE */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  min-height: 400px;
+  color: var(--muted);
+  gap: 16px;
+}
+
+.empty-state .big-icon { font-size: 48px; opacity: 0.4; }
+.empty-state p { font-family: var(--mono); font-size: 12px; letter-spacing: 0.5px; }
+
+/* SVG ANIMATIONS */
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes flow { 0%{stroke-dashoffset:40} 100%{stroke-dashoffset:0} }
+@keyframes flow2 { 0%{stroke-dashoffset:0} 100%{stroke-dashoffset:-40} }
+@keyframes spin { 0%{transform:rotate(0deg)} 100%{transform:rotate(360deg)} }
+@keyframes blink { 0%,49%{opacity:1} 50%,100%{opacity:0} }
+@keyframes rise { 0%{height:10px;y:170px} 100%{} }
+@keyframes fadein { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.anim-flow { stroke-dasharray: 8 4; animation: flow 1.2s linear infinite; }
+.anim-flow2 { stroke-dasharray: 8 4; animation: flow2 1.2s linear infinite; }
+.anim-pulse { animation: pulse 2s ease-in-out infinite; }
+.anim-spin { transform-origin: center; animation: spin 8s linear infinite; }
+
+/* Responsive */
+@media (max-width: 1100px) {
+  .main { grid-template-columns: 280px 1fr; }
+}
+
+@media (max-width: 900px) {
+  .main { grid-template-columns: 1fr; }
+  header, .tabs-container { padding-left: 16px; padding-right: 16px; }
+  .main { padding: 16px; gap: 16px; }
+  .concept-list { order: 2; }
+  .detail-panel { order: 1; min-height: 500px; }
+}
+
+@media (max-width: 600px) {
+  .header-main { display: none; }
+  .logo-text { font-size: 16px; }
+  .logo-text span { display: none; }
+  .level-badge { display: none; }
+  header { padding: 12px 16px; height: auto; }
+  .tab-btn { padding: 6px 12px; font-size: 11px; }
+  .detail-title { font-size: 20px; }
+  .detail-icon { font-size: 24px; }
+}
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<header>
+  <div class="logo">
+    <div class="logo-icon">⛅</div>
+    <div class="logo-text">Cloud<span>&</span>DevOps</div>
+  </div>
+  
+  <div class="header-main">
+    <div class="header-title">
+      <span>MASTER CLASS</span> // From Zero to Production
+    </div>
+  </div>
+
+  <div class="level-badge" id="expDisplay">LVL 1: NOVICE (0 XP)</div>
+  <div class="adventure-toggle-wrap">
+    <button class="adventure-btn" id="adventureToggle">
+      <span class="adv-icon">🎯</span> Adventure Mode: <span id="advStatus">OFF</span>
+    </button>
+  </div>
+</header>
+
+<div class="tabs-container" id="tabs"></div>
+
+<div class="main">
+  <div class="concept-sidebar">
+    <div class="progress-banner" id="progressBanner" style="display: none;">
+      <div class="progress-info">
+        <span>ADVENTURE PROGRESS</span>
+        <span id="progressPercent">0%</span>
+      </div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" id="progressBar"></div>
+      </div>
+    </div>
+    <div class="concept-list" id="conceptList"></div>
+  </div>
+  <div class="detail-panel" id="detailPanel">
+    <div class="empty-state">
+      <div class="big-icon">⛅</div>
+      <p>← Select a concept to explore</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const categories = [
+  {
+    id: 'foundations',
+    name: 'Foundations',
+    icon: '🏗️',
+    color: '#00d4ff',
+    concepts: [
+      {
+        id: 'what-is-cloud',
+        name: 'What is the Cloud?',
+        icon: '☁️',
+        level: 'b',
+        brief: 'Renting compute over the internet',
+        category: 'Foundations',
+        desc: `The "cloud" is simply someone else's computer — a massive data center full of servers that you can rent over the internet. Instead of buying a $10,000 server for your office, you pay $0.02/hour for compute power that you use and then stop paying for.`,
+        challenge: {
+          question: "Which of these is NOT a primary characteristic of Cloud Computing?",
+          options: ["Pay-as-you-go pricing", "Scaling resources manually over weeks", "Global distribution", "Managed hardware"],
+          answer: 1,
+          hint: "Think about how fast you can spin up a server in the cloud vs. buying physical hardware."
+        },
+        points: [
+          'On-demand: spin up in seconds, shut down when done',
+          'Pay-as-you-go: like electricity — you only pay for what you use',
+          'Global: data centers on 6 continents, close to your users',
+          'Managed: the cloud provider handles hardware, power, cooling',
+        ],
+        tools: ['AWS', 'Google Cloud', 'Azure', 'DigitalOcean', 'Hetzner'],
+        viz: 'cloudViz'
+      },
+      {
+        id: 'iaas-paas-saas',
+        name: 'IaaS / PaaS / SaaS',
+        icon: '🍕',
+        level: 'b',
+        brief: 'Three "as-a-service" layers',
+        category: 'Foundations',
+        desc: `Think of it like pizza. You can make it at home (on-prem), order from a diner where they give you the kitchen (IaaS), order a ready-to-bake pizza (PaaS), or just get it delivered (SaaS). Each layer trades control for convenience.`,
+        challenge: {
+          question: "If you want to manage the Operating System yourself but let the provider handle the physical hardware, which model should you choose?",
+          options: ["SaaS (Software as a Service)", "PaaS (Platform as a Service)", "IaaS (Infrastructure as a Service)", "On-Premise"],
+          answer: 2,
+          hint: "IaaS gives you the virtual server (VM) where you install the OS."
+        },
+        points: [
+          'IaaS: raw VMs & storage, you manage OS upward (AWS EC2)',
+          'PaaS: managed runtime, you just deploy code (Heroku, App Engine)',
+          'SaaS: fully managed app, you just use it (Gmail, Slack, Salesforce)',
+          'More control = more responsibility. More managed = less flexibility.',
+        ],
+        tools: ['AWS EC2 (IaaS)', 'Heroku (PaaS)', 'Vercel (PaaS)', 'Salesforce (SaaS)'],
+        viz: 'pizzaViz'
+      },
+      {
+        id: 'regions-zones',
+        name: 'Regions & Availability Zones',
+        icon: '🌐',
+        level: 'b',
+        brief: 'Geographic fault-isolated locations',
+        category: 'Foundations',
+        desc: `A Region is a geographic area (e.g. "US-East"). Inside each Region are 2–6 Availability Zones — physically separate data centers connected by ultra-low-latency links. Deploying across AZs means one fire or flood can't take you down.`,
+        points: [
+          'Region: a cluster of data centers in one geography',
+          'AZ: an isolated failure domain (separate power, cooling, networking)',
+          'Deploy across 2+ AZs to survive a single AZ failure',
+          'Different regions for compliance, latency, and disaster recovery',
+        ],
+        tools: ['AWS (32 regions)', 'GCP (40 regions)', 'Azure (60+ regions)'],
+        viz: 'regionsViz'
+      },
+      {
+        id: 'vms-containers',
+        name: 'VMs vs Containers',
+        icon: '📦',
+        level: 'b',
+        brief: 'Isolation approaches compared',
+        category: 'Foundations',
+        desc: `Virtual Machines each get a full OS copy — heavy but totally isolated. Containers share the host OS kernel but are isolated via namespaces and cgroups — lightweight, fast to start, and portable. Docker made containers mainstream.`,
+        points: [
+          'VM: full OS, boots in 60s, 1–10 GB image, strong isolation',
+          'Container: shared kernel, boots in <1s, 10–100 MB image',
+          'Containers are portable: "works on my machine" = works everywhere',
+          'VMs still used for untrusted workloads requiring full isolation',
+        ],
+        tools: ['Docker', 'Podman', 'VMware', 'VirtualBox', 'containerd'],
+        viz: 'vmContainerViz'
+      },
+    ]
+  },
+  {
+    id: 'devops',
+    name: 'DevOps Culture',
+    icon: '🔁',
+    color: '#7c3aed',
+    concepts: [
+      {
+        id: 'devops-loop',
+        name: 'The DevOps Loop',
+        icon: '♾️',
+        level: 'b',
+        brief: 'Plan → Code → Build → Test → Deploy → Monitor',
+        category: 'DevOps Culture',
+        desc: `DevOps is a culture that breaks the wall between Development (writing code) and Operations (running servers). The infinity loop represents continuous, never-ending cycles of improvement — code is always flowing, feedback is always coming back.`,
+        points: [
+          'Dev side: Plan → Code → Build → Test',
+          'Ops side: Release → Deploy → Operate → Monitor',
+          'Feedback loops: monitoring insights improve next planning cycle',
+          'Goal: shorter release cycles, faster recovery, higher quality',
+        ],
+        tools: ['Jira', 'GitHub', 'Jenkins', 'Datadog', 'PagerDuty'],
+        viz: 'devopsLoopViz'
+      },
+      {
+        id: 'cicd',
+        name: 'CI / CD Pipeline',
+        icon: '🚀',
+        level: 'i',
+        brief: 'Automated build → test → deploy chain',
+        category: 'DevOps Culture',
+        desc: `CI (Continuous Integration) automatically builds and tests every code commit. CD (Continuous Delivery/Deployment) then automatically releases passing builds to staging or production. A well-tuned pipeline means code goes from commit to production in minutes.`,
+        challenge: {
+          question: "In a typical CI/CD pipeline, what is the main purpose of the 'CI' (Continuous Integration) phase?",
+          options: ["To release the software to the public", "To merge code to a shared repo and run automated tests", "To manage the cloud infrastructure costs", "To design the user interface"],
+          answer: 1,
+          hint: "CI focus is on 'integrating' code from multiple developers smoothly."
+        },
+        points: [
+          'CI: merge often, catch integration bugs early, fast feedback',
+          'CD (Delivery): auto-deploy to staging, manual approval for prod',
+          'CD (Deployment): fully automated all the way to production',
+          'A broken pipeline blocks the team — treat it as highest priority',
+        ],
+        tools: ['GitHub Actions', 'GitLab CI', 'Jenkins', 'CircleCI', 'ArgoCD'],
+        viz: 'cicdViz'
+      },
+      {
+        id: 'gitops',
+        name: 'GitOps',
+        icon: '🌿',
+        level: 'i',
+        brief: 'Git as single source of truth',
+        category: 'DevOps Culture',
+        desc: `GitOps treats your Git repo as the source of truth for infrastructure and application state. A controller continuously reconciles the live system to match what's declared in Git. Rollback = reverting a commit.`,
+        points: [
+          'Declarative: desired state lives in Git, not in your brain',
+          'Auditable: full history of who changed what and when',
+          'Automated: controller detects drift and self-heals',
+          'ArgoCD / Flux watch your repo and sync Kubernetes clusters',
+        ],
+        tools: ['ArgoCD', 'Flux', 'GitHub', 'Kubernetes', 'Helm'],
+        viz: 'gitopsViz'
+      },
+      {
+        id: 'sre',
+        name: 'SRE & Reliability',
+        icon: '🛡️',
+        level: 'a',
+        brief: 'SLIs, SLOs, error budgets',
+        category: 'DevOps Culture',
+        desc: `Site Reliability Engineering (SRE) applies software engineering to operations. Instead of "never go down," you define an SLO (e.g. 99.9% uptime = 8.7 hrs downtime/year allowed). The gap between perfect and your SLO is your error budget — you can spend it on risky deploys.`,
+        points: [
+          'SLI: a measurable metric (e.g. % of requests < 200ms)',
+          'SLO: target for that metric (e.g. 99.9% of requests < 200ms)',
+          'SLA: contractual SLO with financial consequences if breached',
+          'Error budget: (1 - SLO) × time. Spend it on innovation.',
+        ],
+        tools: ['Datadog', 'Prometheus', 'PagerDuty', 'Grafana', 'Incident.io'],
+        viz: 'sreViz'
+      },
+    ]
+  },
+  {
+    id: 'networking',
+    name: 'Networking',
+    icon: '🌐',
+    color: '#10b981',
+    concepts: [
+      {
+        id: 'vpc',
+        name: 'VPC & Subnets',
+        icon: '🏘️',
+        level: 'i',
+        brief: 'Your private network in the cloud',
+        category: 'Networking',
+        desc: `A Virtual Private Cloud (VPC) is your own isolated network inside the cloud — like having your own office building. Subnets are floors inside that building. Public subnets can talk to the internet; private subnets cannot (only internal traffic).`,
+        challenge: {
+          question: "Where should you typically place a database that should NOT be accessible directly from the internet?",
+          options: ["Public Subnet", "Internet Gateway", "Private Subnet", "CDN"],
+          answer: 2,
+          hint: "Which type of subnet is designed for isolation?"
+        },
+        points: [
+          'VPC: isolated network with its own IP range (e.g. 10.0.0.0/16)',
+          'Public subnet: has a route to an Internet Gateway — servers are reachable',
+          'Private subnet: no direct internet access — databases live here',
+          'NAT Gateway: lets private subnet talk OUT to internet, but not IN',
+        ],
+        tools: ['AWS VPC', 'GCP VPC', 'Terraform', 'Pulumi', 'Cloudflare'],
+        viz: 'vpcViz'
+      },
+      {
+        id: 'load-balancer',
+        name: 'Load Balancer',
+        icon: '⚖️',
+        level: 'i',
+        brief: 'Distribute traffic across instances',
+        category: 'Networking',
+        desc: `A load balancer is a traffic cop that sits in front of your servers and distributes incoming requests across multiple instances. This provides both scalability (handle more traffic) and availability (if one server dies, traffic goes to the others).`,
+        points: [
+          'Round-robin: requests go to servers in turn, 1→2→3→1→2→3',
+          'Least connections: route to the server with fewest active requests',
+          'Health checks: automatically removes unhealthy servers from rotation',
+          'Layer 4 (TCP) vs Layer 7 (HTTP) — L7 can route by URL/header',
+        ],
+        tools: ['AWS ALB', 'Nginx', 'HAProxy', 'Cloudflare', 'Traefik'],
+        viz: 'lbViz'
+      },
+      {
+        id: 'dns',
+        name: 'DNS & CDN',
+        icon: '📡',
+        level: 'b',
+        brief: 'Name resolution + edge caching',
+        category: 'Networking',
+        desc: `DNS translates human-readable domain names (google.com) into IP addresses (142.250.80.46). A CDN (Content Delivery Network) caches static assets at edge servers worldwide so users get content from a server nearby instead of your origin.`,
+        points: [
+          'DNS lookup: browser → Resolver → Root → TLD → Authoritative',
+          'TTL: how long DNS records are cached before re-checking',
+          'CDN: cache CSS/JS/images at 200+ edge locations worldwide',
+          'CDN also absorbs DDoS attacks and provides TLS termination',
+        ],
+        tools: ['Cloudflare', 'AWS Route 53', 'AWS CloudFront', 'Fastly', 'Akamai'],
+        viz: 'dnsViz'
+      },
+    ]
+  },
+  {
+    id: 'containers',
+    name: 'Containers & K8s',
+    icon: '⚙️',
+    color: '#f59e0b',
+    concepts: [
+      {
+        id: 'docker',
+        name: 'Docker & Images',
+        icon: '🐳',
+        level: 'i',
+        brief: 'Build once, run anywhere',
+        category: 'Containers & K8s',
+        desc: `Docker packages your app + its dependencies into an image — a portable, immutable snapshot. You run that image as a container. Dockerfile is the recipe. Docker Hub is the registry. The container is the running instance.`,
+        challenge: {
+          question: "What is the difference between a Docker Image and a Docker Container?",
+          options: ["Images are for Windows, Containers are for Linux", "An image is a static snapshot; a container is a running instance", "Containers are built from Images using a compiler", "There is no difference"],
+          answer: 1,
+          hint: "Think about a blueprint vs. a built house."
+        },
+        points: [
+          'Dockerfile: step-by-step instructions to build an image (like a recipe)',
+          'Image: immutable, layered snapshot built from a Dockerfile',
+          'Container: a running instance of an image',
+          'Layers: unchanged layers are cached — rebuilds are fast',
+        ],
+        tools: ['Docker', 'Docker Hub', 'BuildKit', 'Podman', 'Buildah'],
+        viz: 'dockerViz'
+      },
+      {
+        id: 'kubernetes',
+        name: 'Kubernetes Architecture',
+        icon: '☸️',
+        level: 'a',
+        brief: 'Container orchestration at scale',
+        category: 'Containers & K8s',
+        desc: `Kubernetes (K8s) is a container orchestrator — it decides where containers run, restarts crashed ones, scales them up/down, and manages networking between them. The Control Plane is the brain; Nodes are the workers running your pods.`,
+        points: [
+          'Pod: smallest unit — 1+ containers sharing network/storage',
+          'Deployment: manages a set of identical pod replicas',
+          'Service: stable network endpoint for a group of pods',
+          'Control Plane: API Server, etcd, Scheduler, Controller Manager',
+        ],
+        tools: ['Kubernetes', 'Helm', 'kubectl', 'EKS', 'GKE', 'k3s'],
+        viz: 'k8sViz'
+      },
+      {
+        id: 'service-mesh',
+        name: 'Service Mesh',
+        icon: '🕸️',
+        level: 'a',
+        brief: 'mTLS, observability, traffic control',
+        category: 'Containers & K8s',
+        desc: `A service mesh adds a sidecar proxy (like Envoy) to every pod. These proxies intercept all network traffic, giving you mTLS encryption, circuit breaking, retries, and distributed tracing — without changing your app code.`,
+        points: [
+          'Sidecar pattern: proxy container injected alongside every app container',
+          'mTLS: mutual TLS — services authenticate each other, all traffic encrypted',
+          'Circuit breaker: stop calling a failing service to let it recover',
+          'Observability: automatic traces, metrics, and logs for every call',
+        ],
+        tools: ['Istio', 'Linkerd', 'Consul', 'Envoy', 'Cilium'],
+        viz: 'meshViz'
+      },
+    ]
+  },
+  {
+    id: 'iac',
+    name: 'Infrastructure as Code',
+    icon: '📝',
+    color: '#ec4899',
+    concepts: [
+      {
+        id: 'terraform',
+        name: 'Terraform',
+        icon: '🏔️',
+        level: 'i',
+        brief: 'Declarative infrastructure provisioning',
+        category: 'IaC',
+        desc: `Terraform lets you declare what infrastructure you want in HCL files, and then provisions it across any cloud. It tracks state — what currently exists — and calculates the diff to apply changes incrementally. Infrastructure as code means version-controlled, reviewable infra.`,
+        points: [
+          'Plan: terraform plan — preview what will change before touching anything',
+          'Apply: terraform apply — make it so. Idempotent.',
+          'State: terraform.tfstate tracks what Terraform has created',
+          'Modules: reusable infrastructure components (like functions for infra)',
+        ],
+        tools: ['Terraform', 'OpenTofu', 'Terragrunt', 'Atlantis', 'Pulumi'],
+        viz: 'terraformViz'
+      },
+      {
+        id: 'ansible',
+        name: 'Ansible & Config Mgmt',
+        icon: '🔧',
+        level: 'i',
+        brief: 'Agentless configuration management',
+        category: 'IaC',
+        desc: `Ansible configures servers by SSHing in and running YAML playbooks — no agent needed. It's idempotent: running the same playbook twice has no effect the second time. Great for installing software, managing files, and orchestrating multi-server setups.`,
+        points: [
+          'Playbook: YAML file describing tasks to run on target hosts',
+          'Inventory: list of servers to manage (static file or dynamic)',
+          'Idempotent: checks state before acting — safe to run repeatedly',
+          'Roles: reusable collections of tasks (like Terraform modules)',
+        ],
+        tools: ['Ansible', 'AWX', 'Chef', 'Puppet', 'SaltStack'],
+        viz: 'ansibleViz'
+      },
+    ]
+  },
+  {
+    id: 'observability',
+    name: 'Observability',
+    icon: '📊',
+    color: '#ef4444',
+    concepts: [
+      {
+        id: 'three-pillars',
+        name: 'Logs, Metrics & Traces',
+        icon: '🔍',
+        level: 'i',
+        brief: 'The three pillars of observability',
+        category: 'Observability',
+        desc: `Observability means you can answer any question about your system from outside. The three pillars: Metrics (numeric time-series — CPU%, RPS, latency), Logs (timestamped text events), and Traces (end-to-end request journey across services).`,
+        points: [
+          'Metrics: efficient, good for dashboards and alerting (Prometheus)',
+          'Logs: rich context, good for debugging specific events (Loki)',
+          'Traces: see which service is slow in a request chain (Jaeger)',
+          'Correlate all three: link a slow metric → relevant logs → trace',
+        ],
+        tools: ['Prometheus', 'Grafana', 'Jaeger', 'OpenTelemetry', 'Datadog'],
+        viz: 'obsViz'
+      },
+      {
+        id: 'alerting',
+        name: 'Alerting & On-Call',
+        icon: '🚨',
+        level: 'i',
+        brief: 'From symptom to engineer\'s phone',
+        category: 'Observability',
+        desc: `Alerting fires when a metric breaches a threshold. Good alerts are symptom-based (user-impacting), not cause-based (CPU > 80%). On-call rotations ensure someone is always responsible. Post-mortems turn incidents into improvements.`,
+        points: [
+          'Alert on symptoms: "error rate > 1%" not "CPU > 80%"',
+          'Severity levels: P1 (wake me up) → P4 (Slack tomorrow)',
+          'On-call rotation: fair sharing of pager duty across team',
+          'Blameless post-mortem: what failed? How to prevent recurrence?',
+        ],
+        tools: ['PagerDuty', 'OpsGenie', 'Alertmanager', 'Grafana OnCall'],
+        viz: 'alertViz'
+      },
+    ]
+  },
+  {
+    id: 'security',
+    name: 'Security',
+    icon: '🔐',
+    color: '#6366f1',
+    concepts: [
+      {
+        id: 'iam',
+        name: 'IAM & Least Privilege',
+        icon: '🔑',
+        level: 'i',
+        brief: 'Who can do what to which resource',
+        category: 'Security',
+        desc: `IAM (Identity and Access Management) controls who (Users, Roles, Services) can do what (Actions) on which resources (S3 buckets, EC2 instances). Least privilege: grant only the minimum permissions needed. A compromised service with minimal IAM causes minimal damage.`,
+        points: [
+          'Principal: who is making the request (user, role, service account)',
+          'Action: what are they trying to do (s3:GetObject, ec2:StartInstances)',
+          'Resource: what are they acting on (specific bucket ARN)',
+          'Deny by default: unless explicitly allowed, all actions are denied',
+        ],
+        tools: ['AWS IAM', 'Google IAM', 'Vault', 'OPA', 'Keycloak'],
+        viz: 'iamViz'
+      },
+      {
+        id: 'secrets',
+        name: 'Secrets Management',
+        icon: '🗝️',
+        level: 'i',
+        brief: 'Credentials without hardcoding',
+        category: 'Security',
+        desc: `Secrets (API keys, DB passwords, TLS certs) must never live in code or environment variables in plain text. A secrets manager stores, encrypts, audits access, and auto-rotates them. Apps fetch secrets at runtime via authenticated API calls.`,
+        points: [
+          'Never commit secrets to Git — rotate immediately if you do',
+          'Inject at runtime: app fetches secret from Vault on startup',
+          'Rotation: automatically change credentials before they expire',
+          'Audit log: who fetched which secret and when',
+        ],
+        tools: ['HashiCorp Vault', 'AWS Secrets Manager', 'Doppler', 'SOPS'],
+        viz: 'secretsViz'
+      },
+    ]
+  },
+  {
+    id: 'architecture',
+    name: 'Modern Arch',
+    icon: '🏛️',
+    color: '#fbbf24',
+    concepts: [
+      {
+        id: 'serverless',
+        name: 'Serverless (FaaS)',
+        icon: 'λ',
+        level: 'i',
+        brief: 'Compute without managing servers',
+        category: 'Modern Architecture',
+        desc: `Serverless lets you run code in response to events (HTTP requests, file uploads, timers) without managing servers. The provider handles scaling, patching, and availability. You only pay for the milliseconds your code runs.`,
+        points: [
+          'Event-driven: code waits for a trigger to execute',
+          'Scale-to-zero: zero cost when not in use',
+          'Massive scale: handles 1 → 1,000,000 concurrent requests automatically',
+          'Stateless: each execution is fresh, use DBs for persistence',
+        ],
+        tools: ['AWS Lambda', 'Google Cloud Functions', 'Vercel', 'Supabase Edge'],
+        viz: 'serverlessViz'
+      },
+      {
+        id: 'microservices',
+        name: 'Microservices',
+        icon: '🧩',
+        level: 'a',
+        brief: 'Independent, decentralized services',
+        category: 'Modern Architecture',
+        desc: `Instead of one giant app (monolith), microservices break it into small, independent pieces that talk via APIs. This lets teams move faster, use different technologies, and scale only the parts of the app that need it.`,
+        points: [
+          'Independent deployment: change one feature without affecting others',
+          'Polyglot: use Go for speed-critical services, Python for ML',
+          'Fault isolation: one service crashing doesn\'t bring down the whole app',
+          'Organization: aligns software architecture with team structures',
+        ],
+        tools: ['Kubernetes', 'gRPC', 'RabbitMQ', 'Kafka', 'Linkerd'],
+        viz: 'microViz'
+      },
+      {
+        id: 'event-driven',
+        name: 'Event-Driven (EDA)',
+        icon: '⚡',
+        level: 'a',
+        brief: 'Asynchronous decoupling with pub/sub',
+        category: 'Modern Architecture',
+        desc: `In EDA, services don't wait for each other. One service emits an event ("OrderPlaced"), and many other services can react asynchronously ("SendEmail", "UpdateInventory"). This decouples services and increases system resilience.`,
+        points: [
+          'Decoupling: producer doesn\'t know who consumes the event',
+          'Resilience: if consumer is down, messages wait in a queue',
+          'Parallel processing: multiple consumers react to one event simultaneously',
+          'Auditability: the stream of events becomes a history of the system',
+        ],
+        tools: ['Apache Kafka', 'AWS SQS/SNS', 'RabbitMQ', 'Redis Pub/Sub'],
+        viz: 'edaViz'
+      },
+    ]
+  },
+  {
+    id: 'storage',
+    name: 'Cloud Storage',
+    icon: '💾',
+    color: '#38bdf8',
+    concepts: [
+      {
+        id: 'object-storage',
+        name: 'Object Storage (S3)',
+        icon: '📦',
+        level: 'b',
+        brief: 'Scalable storage for files/assets',
+        category: 'Cloud Storage',
+        desc: `Object storage stores files (images, backups, logs) with metadata in a flat namespace. Unlike a hard drive, it's virtually infinite and accessible via HTTP. It's the most common way to store static website assets and large datasets.`,
+        points: [
+          '99.999999999% durability: files are replicated across multiple DCs',
+          'Static hosting: serve websites directly from a "bucket"',
+          'Lifecycle policies: auto-move old files to cheaper "glacier" storage',
+          'Versioning: recover previous versions of any file easily',
+        ],
+        tools: ['AWS S3', 'GCS', 'Azure Blob', 'Minio', 'R2'],
+        viz: 's3Viz'
+      },
+      {
+        id: 'managed-db',
+        name: 'Managed Databases',
+        icon: '🗄️',
+        level: 'i',
+        brief: 'SQL & NoSQL without the DBA',
+        category: 'Cloud Storage',
+        desc: `Cloud providers manage the painful parts of databases: patching, backups, replication, and high availability. You just query the data. RDS (SQL) gives you traditional relational power, while DynamoDB (NoSQL) gives you web-scale speed.`,
+        points: [
+          'High Availability: auto-failover to a standby if the primary dies',
+          'Read Replicas: scale read traffic by cloning your data',
+          'Point-in-time recovery: restore your DB to any second in the past 35 days',
+          'Automated patching: keep your database secure without downtime',
+        ],
+        tools: ['AWS RDS', 'PlanetScale', 'DynamoDB', 'MongoDB Atlas', 'Aiven'],
+        viz: 'dbViz'
+      },
+    ]
+  },
+  {
+    id: 'management',
+    name: 'Ops & Strategy',
+    icon: '📈',
+    color: '#10b981',
+    concepts: [
+      {
+        id: 'finops',
+        name: 'FinOps (Cost Mgmt)',
+        icon: '💰',
+        level: 'i',
+        brief: 'Cloud financial management & efficiency',
+        category: 'Ops & Strategy',
+        desc: `FinOps is the practice of bringing financial accountability to the variable spend model of cloud. It's about making sure you get the most value out of every dollar spent, using reserved instances, spot pricing, and right-sizing.`,
+        points: [
+          'Right-sizing: don\'t use a 16GB RAM server if you only need 4GB',
+          'Reserved Instances: pay upfront for 30–60% discounts on long-term use',
+          'Spot Instances: use spare cloud capacity for up to 90% savings',
+          'Tagging: label every resource to see exactly which team spent what',
+        ],
+        tools: ['AWS Cost Explorer', 'CloudHealth', 'KubeCost', 'Vantage'],
+        viz: 'finopsViz'
+      },
+      {
+        id: 'disaster-recovery',
+        name: 'Disaster Recovery (DR)',
+        icon: '🏥',
+        level: 'a',
+        brief: 'RTO, RPO, and backup strategies',
+        category: 'Ops & Strategy',
+        desc: `Disaster Recovery is your plan for when a whole region goes down or data is deleted. RTO (Recovery Time Objective) is how fast you must recover. RPO (Recovery Point Objective) is how much data you can afford to lose. Background: Multi-region is the gold standard.`,
+        points: [
+          'Backup & Restore: simplest, slowest (High RTO)',
+          'Pilot Light: DB is sync\'d, app servers off until needed',
+          'Warm Standby: scaled-down version of your app always running',
+          'Multi-site Active/Active: zero downtime, highest cost (Lowest RTO)',
+        ],
+        tools: ['AWS DRS', 'Veeam', 'Zerto', 'Velero (K8s)'],
+        viz: 'drViz'
+      },
+    ]
+  },
+];
+
+const vizFunctions = {
+  cloudViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs>
+        <marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+          <path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </marker>
+      </defs>
+      <!-- User -->
+      <rect x="30" y="60" width="100" height="70" rx="10" fill="#111318" stroke="#00d4ff" stroke-width="0.5"/>
+      <text x="80" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="22">💻</text>
+      <text x="80" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6b7280">Your Laptop</text>
+      <!-- Internet cloud shape -->
+      <ellipse cx="290" cy="90" rx="90" ry="40" fill="#181b22" stroke="#00d4ff" stroke-width="0.5" opacity="0.8"/>
+      <ellipse cx="255" cy="78" rx="40" ry="28" fill="#181b22" stroke="#00d4ff" stroke-width="0.5" opacity="0.6"/>
+      <ellipse cx="325" cy="75" rx="38" ry="26" fill="#181b22" stroke="#00d4ff" stroke-width="0.5" opacity="0.6"/>
+      <text x="290" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00d4ff" font-weight="700">INTERNET</text>
+      <!-- Arrows -->
+      <line x1="130" y1="95" x2="195" y2="90" stroke="#00d4ff" stroke-width="1" marker-end="url(#arr)" class="anim-flow"/>
+      <line x1="385" y1="90" x2="445" y2="90" stroke="#00d4ff" stroke-width="1" marker-end="url(#arr)" class="anim-flow"/>
+      <!-- Cloud DC box -->
+      <rect x="450" y="40" width="130" height="120" rx="12" fill="#181b22" stroke="#00d4ff" stroke-width="0.5"/>
+      <text x="515" y="62" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280" letter-spacing="1">DATA CENTER</text>
+      <rect x="464" y="70" width="102" height="24" rx="4" fill="#111318" stroke="rgba(0,212,255,0.2)" stroke-width="0.5"/>
+      <text x="515" y="86" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#e8eaf0">🖥️ Compute</text>
+      <rect x="464" y="98" width="102" height="24" rx="4" fill="#111318" stroke="rgba(0,212,255,0.2)" stroke-width="0.5"/>
+      <text x="515" y="114" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#e8eaf0">💾 Storage</text>
+      <rect x="464" y="126" width="102" height="24" rx="4" fill="#111318" stroke="rgba(0,212,255,0.2)" stroke-width="0.5"/>
+      <text x="515" y="142" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#e8eaf0">🌐 Network</text>
+      <!-- Labels -->
+      <text x="80" y="155" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6b7280">Local</text>
+      <text x="515" y="175" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6b7280">Managed</text>
+    </svg>`,
+
+  pizzaViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      ${[
+        { x:20, label:'On-Premise', rows:['Networking','Storage','Servers','Hypervisor','OS','Runtime','Middleware','App Code','Data'], color:'#6b7280' },
+        { x:165, label:'IaaS', rows:['Networking','Storage','Servers','Hypervisor','OS','Runtime','Middleware','App Code','Data'], managed:4, color:'#00d4ff' },
+        { x:310, label:'PaaS', rows:['Networking','Storage','Servers','Hypervisor','OS','Runtime','Middleware','App Code','Data'], managed:7, color:'#7c3aed' },
+        { x:455, label:'SaaS', rows:['Networking','Storage','Servers','Hypervisor','OS','Runtime','Middleware','App Code','Data'], managed:9, color:'#10b981' },
+      ].map(col => {
+        const rh = 16; const rw = 120;
+        return col.rows.map((r,i) => {
+          const managed = col.managed || 0;
+          const isManaged = i < managed;
+          const fill = isManaged ? col.color+'22' : '#111318';
+          const stroke = isManaged ? col.color : 'rgba(255,255,255,0.08)';
+          const tc = isManaged ? col.color : '#6b7280';
+          return `<rect x="${col.x}" y="${15 + i*rh}" width="${rw}" height="${rh-1}" rx="3" fill="${fill}" stroke="${stroke}" stroke-width="0.5"/>
+          <text x="${col.x+rw/2}" y="${15 + i*rh + rh/2 + 3.5}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="${tc}">${r}</text>`;
+        }).join('') + `<text x="${col.x+rw/2}" y="178" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="${col.color}" font-weight="700">${col.label}</text>`;
+      }).join('')}
+      <text x="20" y="195" font-family="JetBrains Mono" font-size="9" fill="#6b7280">You manage ↓ | Provider manages ↑ (highlighted)</text>
+    </svg>`,
+
+  regionsViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <rect x="20" y="30" width="260" height="150" rx="14" fill="none" stroke="#10b981" stroke-width="0.5" stroke-dasharray="4 3"/>
+      <text x="36" y="52" font-family="JetBrains Mono" font-size="10" fill="#10b981" letter-spacing="1">US-EAST-1 REGION</text>
+      ${['AZ-a','AZ-b','AZ-c'].map((az,i) => `
+        <rect x="${34 + i*78}" y="65" width="68" height="100" rx="10" fill="#181b22" stroke="rgba(16,185,129,0.4)" stroke-width="0.5"/>
+        <text x="${68 + i*78}" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#10b981">${az}</text>
+        <rect x="${42+i*78}" y="95" width="52" height="16" rx="3" fill="#111318" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+        <text x="${68+i*78}" y="106" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">vm-1</text>
+        <rect x="${42+i*78}" y="115" width="52" height="16" rx="3" fill="#111318" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+        <text x="${68+i*78}" y="126" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">vm-2</text>
+        <rect x="${42+i*78}" y="135" width="52" height="16" rx="3" fill="#111318" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+        <text x="${68+i*78}" y="146" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">db</text>
+      `).join('')}
+      <!-- EU region -->
+      <rect x="320" y="30" width="260" height="150" rx="14" fill="none" stroke="#7c3aed" stroke-width="0.5" stroke-dasharray="4 3"/>
+      <text x="336" y="52" font-family="JetBrains Mono" font-size="10" fill="#7c3aed" letter-spacing="1">EU-WEST-1 REGION</text>
+      ${['AZ-a','AZ-b'].map((az,i) => `
+        <rect x="${336 + i*118}" y="65" width="102" height="100" rx="10" fill="#181b22" stroke="rgba(124,58,237,0.4)" stroke-width="0.5"/>
+        <text x="${387 + i*118}" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#7c3aed">${az}</text>
+        <rect x="${346+i*118}" y="95" width="82" height="20" rx="3" fill="#111318" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+        <text x="${387+i*118}" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">vm-instance</text>
+        <rect x="${346+i*118}" y="120" width="82" height="20" rx="3" fill="#111318" stroke="rgba(255,255,255,0.08)" stroke-width="0.5"/>
+        <text x="${387+i*118}" y="133" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">replicated-db</text>
+      `).join('')}
+    </svg>`,
+
+  vmContainerViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <!-- VM side -->
+      <text x="145" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00d4ff" font-weight="700">VIRTUAL MACHINES</text>
+      <rect x="20" y="165" width="250" height="22" rx="4" fill="#00d4ff22" stroke="#00d4ff" stroke-width="0.5"/>
+      <text x="145" y="180" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff">Physical Infrastructure</text>
+      <rect x="20" y="140" width="250" height="22" rx="4" fill="#181b22" stroke="rgba(0,212,255,0.3)" stroke-width="0.5"/>
+      <text x="145" y="155" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6b7280">Hypervisor</text>
+      ${[0,1,2].map(i => `
+        <rect x="${25+i*84}" y="45" width="76" height="90" rx="8" fill="#181b22" stroke="#00d4ff" stroke-width="0.5" opacity="${0.6+i*0.2}"/>
+        <text x="${63+i*84}" y="63" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#888">VM-${i+1}</text>
+        <rect x="${30+i*84}" y="70" width="66" height="14" rx="2" fill="#111318"/>
+        <text x="${63+i*84}" y="80" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">Guest OS</text>
+        <rect x="${30+i*84}" y="87" width="66" height="14" rx="2" fill="#111318"/>
+        <text x="${63+i*84}" y="97" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">Libs</text>
+        <rect x="${30+i*84}" y="104" width="66" height="24" rx="3" fill="rgba(0,212,255,0.08)" stroke="rgba(0,212,255,0.2)" stroke-width="0.5"/>
+        <text x="${63+i*84}" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00d4ff">APP</text>
+      `).join('')}
+      <!-- Container side -->
+      <text x="445" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#10b981" font-weight="700">CONTAINERS</text>
+      <rect x="330" y="165" width="250" height="22" rx="4" fill="#10b98122" stroke="#10b981" stroke-width="0.5"/>
+      <text x="455" y="180" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#10b981">Physical Infrastructure</text>
+      <rect x="330" y="140" width="250" height="22" rx="4" fill="#181b22" stroke="rgba(16,185,129,0.3)" stroke-width="0.5"/>
+      <text x="455" y="155" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6b7280">Host OS Kernel (shared)</text>
+      <rect x="330" y="115" width="250" height="22" rx="4" fill="#181b22" stroke="rgba(16,185,129,0.2)" stroke-width="0.5"/>
+      <text x="455" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6b7280">Container Engine</text>
+      ${[0,1,2,3].map(i => `
+        <rect x="${332+i*62}" y="45" width="58" height="65" rx="6" fill="#181b22" stroke="#10b981" stroke-width="0.5" opacity="${0.6+i*0.1}"/>
+        <text x="${361+i*62}" y="63" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#888">C${i+1}</text>
+        <rect x="${337+i*62}" y="68" width="48" height="12" rx="2" fill="#111318"/>
+        <text x="${361+i*62}" y="77" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">Bins</text>
+        <rect x="${337+i*62}" y="83" width="48" height="22" rx="3" fill="rgba(16,185,129,0.08)" stroke="rgba(16,185,129,0.2)" stroke-width="0.5"/>
+        <text x="${361+i*62}" y="98" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#10b981">APP</text>
+      `).join('')}
+    </svg>`,
+
+  devopsLoopViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      ${(() => {
+        const cx=300, cy=105, r=72;
+        const steps = [
+          {label:'Plan', icon:'📋', angle:-90, color:'#00d4ff'},
+          {label:'Code', icon:'💻', angle:-30, color:'#7c3aed'},
+          {label:'Build', icon:'🔨', angle:30, color:'#10b981'},
+          {label:'Test', icon:'🧪', angle:90, color:'#f59e0b'},
+          {label:'Deploy', icon:'🚀', angle:150, color:'#ef4444'},
+          {label:'Monitor', icon:'📊', angle:-150, color:'#ec4899'},
+        ];
+        const rad = a => a*Math.PI/180;
+        const nodes = steps.map(s => ({
+          ...s,
+          x: cx + r*Math.cos(rad(s.angle)),
+          y: cy + r*Math.sin(rad(s.angle))
+        }));
+        const arcs = nodes.map((n,i) => {
+          const next = nodes[(i+1)%nodes.length];
+          return `<path d="M${n.x.toFixed(1)},${n.y.toFixed(1)} A${r},${r} 0 0,1 ${next.x.toFixed(1)},${next.y.toFixed(1)}" fill="none" stroke="${n.color}" stroke-width="2" stroke-dasharray="6 4" class="anim-flow" opacity="0.4"/>`;
+        }).join('');
+        const boxes = nodes.map(n => {
+          const bw=72, bh=42;
+          return `<rect x="${(n.x-bw/2).toFixed(1)}" y="${(n.y-bh/2).toFixed(1)}" width="${bw}" height="${bh}" rx="10" fill="#181b22" stroke="${n.color}" stroke-width="1.5"/>
+          <text x="${n.x.toFixed(1)}" y="${(n.y-6).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono" font-size="14">${n.icon}</text>
+          <text x="${n.x.toFixed(1)}" y="${(n.y+13).toFixed(1)}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="${n.color}" font-weight="700">${n.label}</text>`;
+        }).join('');
+        return arcs + boxes + `<text x="${cx}" y="${cy+5}" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#6b7280" font-weight="700">DevOps Loop</text>`;
+      })()}
+    </svg>`,
+
+  cicdViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      ${[
+        {x:25, label:'Commit', icon:'🌿', color:'#7c3aed'},
+        {x:140, label:'Build', icon:'📦', color:'#00d4ff'},
+        {x:255, label:'Test', icon:'🧪', color:'#10b981'},
+        {x:370, label:'Staging', icon:'🏗️', color:'#f59e0b'},
+        {x:485, label:'Prod', icon:'🚀', color:'#ef4444'},
+      ].map((s,i,arr)=>`
+        <rect x="${s.x}" y="65" width="90" height="70" rx="10" fill="#181b22" stroke="${s.color}" stroke-width="1.5"/>
+        <text x="${s.x+45}" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="16">${s.icon}</text>
+        <text x="${s.x+45}" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="${s.color}" font-weight="700">${s.label}</text>
+        ${i<arr.length-1?`<line x1="${s.x+90}" y1="100" x2="${arr[i+1].x}" y2="100" stroke="${s.color}" stroke-width="1" marker-end="url(#arr)" class="anim-flow" opacity="0.4"/>`:''}
+      `).join('')}
+      <text x="300" y="175" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280" letter-spacing="1">CONTINUOUS INTEGRATION / DEPLOYMENT PIPELINE</text>
+    </svg>`,
+
+  gitopsViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Git repo -->
+      <rect x="25" y="55" width="140" height="90" rx="12" fill="#181b22" stroke="#10b981" stroke-width="0.5"/>
+      <text x="95" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="18">🌿</text>
+      <text x="95" y="110" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#10b981" font-weight="700">Git Repo</text>
+      <text x="95" y="128" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">Desired State</text>
+      <!-- ArgoCD controller -->
+      <rect x="235" y="55" width="140" height="90" rx="12" fill="#181b22" stroke="#7c3aed" stroke-width="1"/>
+      <text x="305" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="18">⚙️</text>
+      <text x="305" y="110" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#7c3aed" font-weight="700">GitOps Engine</text>
+      <text x="305" y="128" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">Reconciliation</text>
+      <!-- K8s cluster -->
+      <rect x="445" y="55" width="140" height="90" rx="12" fill="#181b22" stroke="#00d4ff" stroke-width="0.5"/>
+      <text x="515" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="18">☸️</text>
+      <text x="515" y="110" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00d4ff" font-weight="700">Cluster</text>
+      <text x="515" y="128" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">Live State</text>
+      <!-- Arrows -->
+      <line x1="165" y1="100" x2="233" y2="100" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+      <line x1="375" y1="100" x2="443" y2="100" stroke="#7c3aed" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+      <!-- Drift feedback -->
+      <path d="M515,145 Q515,175 305,175 Q305,175 305,145" fill="none" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="4 3" marker-end="url(#arr)"/>
+      <text x="410" y="172" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#ef4444">Drift Detected → Sync</text>
+    </svg>`,
+
+  sreViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <!-- SLO gauge -->
+      <text x="130" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6b7280" letter-spacing="1">ERROR BUDGET (SLO)</text>
+      <rect x="30" y="45" width="200" height="25" rx="6" fill="#181b22" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+      <rect x="30" y="45" width="140" height="25" rx="6" fill="#10b981" opacity="0.6"/>
+      <text x="130" y="61" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#fff" font-weight="700">70% remaining</text>
+      <text x="30" y="88" font-family="JetBrains Mono" font-size="9" fill="#888">SLO: 99.9% uptime</text>
+      <text x="30" y="105" font-family="JetBrains Mono" font-size="9" fill="#888">= 8.7 hrs downtime/yr</text>
+      <!-- SLI metric timeline -->
+      <text x="400" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6b7280" letter-spacing="1">LIVE RELIABILITY (SLI)</text>
+      <rect x="250" y="45" width="320" height="110" rx="12" fill="#181b22" stroke="rgba(255,255,255,0.06)" stroke-width="0.5"/>
+      <line x1="265" y1="140" x2="555" y2="140" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+      <line x1="265" y1="140" x2="265" y2="60" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+      <line x1="265" y1="75" x2="555" y2="75" stroke="#ef4444" stroke-width="0.8" stroke-dasharray="4 3" opacity="0.4"/>
+      <text x="258" y="78" text-anchor="end" font-family="JetBrains Mono" font-size="8" fill="#ef4444">SLO Threshold</text>
+      <polyline points="265,95 315,90 365,88 400,110 425,130 445,85 495,83 555,81" fill="none" stroke="#00d4ff" stroke-width="2"/>
+      <circle cx="425" cy="130" r="5" fill="#ef4444" class="anim-pulse"/>
+      <text x="425" y="152" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#ef4444">INCIDENT</text>
+      <!-- Key metrics -->
+      <rect x="30" y="130" width="200" height="42" rx="8" fill="#10b98108" stroke="#10b98122" stroke-width="0.5"/>
+      <text x="45" y="155" font-family="JetBrains Mono" font-size="16" fill="#10b981" font-weight="700">99.93%</text>
+      <text x="135" y="155" font-family="JetBrains Mono" font-size="9" fill="#888">Availability</text>
+    </svg>`,
+
+  vpcViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <!-- VPC outer -->
+      <rect x="25" y="30" width="550" height="150" rx="14" fill="none" stroke="#10b981" stroke-width="0.5" stroke-dasharray="6 4"/>
+      <text x="40" y="22" font-family="JetBrains Mono" font-size="10" fill="#10b981" letter-spacing="1" font-weight="700">VPC — 10.0.0.0/16</text>
+      <!-- Public subnet -->
+      <rect x="40" y="45" width="245" height="120" rx="12" fill="#10b98108" stroke="#10b981" stroke-width="0.5"/>
+      <text x="52" y="62" font-family="JetBrains Mono" font-size="9" fill="#10b981">PUBLIC SUBNET (10.0.1.0/24)</text>
+      <rect x="55" y="75" width="100" height="50" rx="8" fill="#181b22" stroke="rgba(16,185,129,0.4)" stroke-width="0.5"/>
+      <text x="105" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="14">⚖️ LB</text>
+      <rect x="170" y="75" width="100" height="50" rx="8" fill="#181b22" stroke="rgba(16,185,129,0.4)" stroke-width="0.5"/>
+      <text x="220" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="14">🌐 WEB</text>
+      <!-- Private subnet -->
+      <rect x="315" y="45" width="245" height="120" rx="12" fill="#7c3aed08" stroke="#7c3aed" stroke-width="0.5" stroke-dasharray="4 3"/>
+      <text x="327" y="62" font-family="JetBrains Mono" font-size="9" fill="#7c3aed">PRIVATE SUBNET (10.0.2.0/24)</text>
+      <rect x="330" y="75" width="100" height="50" rx="8" fill="#181b22" stroke="rgba(124,58,237,0.4)" stroke-width="0.5"/>
+      <text x="380" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="14">⚙️ APP</text>
+      <rect x="445" y="75" width="100" height="50" rx="8" fill="#181b22" stroke="rgba(124,58,237,0.4)" stroke-width="0.5"/>
+      <text x="495" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="14">💾 DB</text>
+      <!-- Internet Gateway -->
+      <rect x="250" y="178" width="100" height="20" rx="5" fill="#181b22" stroke="#00d4ff" stroke-width="0.5"/>
+      <text x="300" y="191" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#00d4ff">Internet Gateway</text>
+    </svg>`,
+
+  lbViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Users -->
+      ${[0,1,2].map(i=>`
+        <rect x="25" y="${35+i*55}" width="80" height="36" rx="8" fill="#181b22" stroke="rgba(0,212,255,0.3)" stroke-width="0.5"/>
+        <text x="65" y="${58+i*55}" text-anchor="middle" font-family="JetBrains Mono" font-size="14">👤</text>
+        <line x1="110" y1="${53+i*55}" x2="195" y2="100" stroke="#00d4ff" stroke-width="0.8" marker-end="url(#arr)" opacity="0.3"/>
+      `).join('')}
+      <!-- LB -->
+      <rect x="210" y="65" width="140" height="70" rx="12" fill="#181b22" stroke="#00d4ff" stroke-width="1.5"/>
+      <text x="280" y="93" text-anchor="middle" font-family="JetBrains Mono" font-size="18">⚖️</text>
+      <text x="280" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00d4ff" font-weight="700">LOAD BALANCER</text>
+      <!-- Targets -->
+      ${[0,1,2].map(i=>`
+        <line x1="355" y1="100" x2="435" y2="${40+i*60}" stroke="#10b981" stroke-width="1" marker-end="url(#arr)" class="anim-flow" opacity="0.5"/>
+        <rect x="445" y="${20+i*60}" width="130" height="40" rx="8" fill="#181b22" stroke="#10b981" stroke-width="0.5"/>
+        <text x="510" y="${46+i*60}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#10b981">Web Instance ${i+1}</text>
+      `).join('')}
+    </svg>`,
+
+  dnsViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Browser -->
+      <rect x="25" y="70" width="100" height="60" rx="10" fill="#181b22" stroke="#6b7280" stroke-width="0.5"/>
+      <text x="75" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="16">🌍</text>
+      <text x="75" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#888">Browser</text>
+      <!-- DNS chain -->
+      ${[
+        {x:145, label:'Local Resolver', icon:'🔍', color:'#00d4ff'},
+        {x:260, label:'Root & TLD', icon:'🌐', color:'#7c3aed'},
+        {x:375, label:'Auth NS', icon:'🏛️', color:'#10b981'},
+        {x:490, label:'Managed IP', icon:'🏠', color:'#f59e0b'},
+      ].map((n,i,arr)=>`
+        <rect x="${n.x}" y="70" width="100" height="60" rx="10" fill="#181b22" stroke="${n.color}" stroke-width="0.5"/>
+        <text x="${n.x+50}" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="14">${n.icon}</text>
+        <text x="${n.x+50}" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="${n.color}" font-weight="700">${n.label}</text>
+        ${i===0?`<line x1="125" y1="100" x2="${n.x}" y2="100" stroke="${n.color}" stroke-width="1" marker-end="url(#arr)" class="anim-flow"/>`:''}
+        ${i<arr.length-1?`<line x1="${n.x+100}" y1="100" x2="${arr[i+1].x}" y2="100" stroke="${n.color}" stroke-width="1" marker-end="url(#arr)" class="anim-flow"/>` : ''}
+      `).join('')}
+      <text x="300" y="40" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6b7280" letter-spacing="2">RESURCURSIVE DNS RESOLUTION chain</text>
+      <text x="75" y="155" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#888">"google.com"</text>
+      <line x1="125" y1="148" x2="480" y2="148" stroke="rgba(255,255,255,0.05)" stroke-width="1" stroke-dasharray="4 4"/>
+      <text x="540" y="155" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#888">142.250.1.1</text>
+    </svg>`,
+
+  dockerViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Dockerfile -->
+      <rect x="25" y="30" width="135" height="140" rx="10" fill="#181b22" stroke="#00d4ff" stroke-width="0.5"/>
+      <text x="92" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff" font-weight="700">Dockerfile</text>
+      ${['FROM node','ADD .','RUN npm install','CMD start'].map((l,i)=>`<text x="40" y="${75+i*20}" font-family="JetBrains Mono" font-size="9" fill="#e8eaf0">${l}</text>`).join('')}
+      <!-- Arrow build -->
+      <line x1="165" y1="100" x2="205" y2="100" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+      <text x="185" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">build</text>
+      <!-- Image layers -->
+      <text x="300" y="35" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#10b981" font-weight="700">Image (Immutable)</text>
+      ${[1,2,3,4].map(i=>`
+        <rect x="220" y="${50+i*22}" width="160" height="20" rx="4" fill="#10b98115" stroke="#10b981" stroke-width="0.5"/>
+        <text x="300" y="${64+i*22}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#10b981">Layer ${i}</text>
+      `).join('')}
+      <!-- Arrow run -->
+      <line x1="385" y1="100" x2="425" y2="100" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+      <text x="405" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">run</text>
+      <!-- Container -->
+      <rect x="435" y="60" width="140" height="80" rx="12" fill="#181b22" stroke="#7c3aed" stroke-width="1"/>
+      <text x="505" y="93" text-anchor="middle" font-family="JetBrains Mono" font-size="18">🐳</text>
+      <text x="505" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7c3aed" font-weight="700">Container</text>
+      <text x="505" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">Mutable Runtime</text>
+    </svg>`,
+
+  k8sViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Control plane -->
+      <rect x="25" y="35" width="160" height="130" rx="15" fill="#181b22" stroke="#00d4ff" stroke-width="1.5"/>
+      <text x="105" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="16">☸️</text>
+      <text x="105" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff" font-weight="700">Control Plane</text>
+      <text x="105" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">API, etcd, Scheduler</text>
+      <line x1="190" y1="100" x2="235" y2="100" stroke="#00d4ff" stroke-width="1" marker-end="url(#arr)" class="anim-flow"/>
+      <!-- Worker node -->
+      <rect x="245" y="30" width="330" height="140" rx="15" fill="#181b22" stroke="#7c3aed" stroke-width="1"/>
+      <text x="410" y="52" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#7c3aed" font-weight="700">Worker Node (kubelet)</text>
+      ${[0,1,2].map(i=>`
+        <rect x="${265+i*100}" y="65" width="90" height="85" rx="10" fill="#111318" stroke="rgba(124,58,237,0.3)" stroke-width="0.5"/>
+        <text x="${310+i*100}" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#7c3aed">Pod ${i+1}</text>
+        <rect x="${275+i*100}" y="95" width="70" height="20" rx="4" fill="#10b98115" stroke="rgba(16,185,129,0.3)" stroke-width="0.5"/>
+        <text x="${310+i*100}" y="108" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#10b981">container</text>
+        <rect x="${275+i*100}" y="120" width="70" height="20" rx="4" fill="#10b98108" stroke="rgba(16,185,129,0.1)" stroke-width="0.5"/>
+        <text x="${310+i*100}" y="133" text-anchor="middle" font-family="JetBrains Mono" font-size="7" fill="#6b7280">sidecar</text>
+      `).join('')}
+      <text x="300" y="185" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">kubectl → API → schedule pods across nodes</text>
+    </svg>`,
+
+  meshViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      ${[
+        {x:100, y:45, label:'Service A', icon:'🔵'},
+        {x:300, y:45, label:'Service B', icon:'🟣'},
+        {x:500, y:45, label:'Service C', icon:'🟢'},
+      ].map(s=>`
+        <rect x="${s.x-60}" y="${s.y}" width="120" height="90" rx="12" fill="#181b22" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+        <text x="${s.x}" y="${s.y+18}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">${s.label}</text>
+        <rect x="${s.x-50}" y="${s.y+28}" width="100" height="24" rx="4" fill="#111318" stroke="rgba(0,212,255,0.3)" stroke-width="0.5"/>
+        <text x="${s.x}" y="${s.y+44}" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#00d4ff">app</text>
+        <rect x="${s.x-50}" y="${s.y+56}" width="100" height="22" rx="4" fill="rgba(239,68,68,0.1)" stroke="rgba(239,68,68,0.3)" stroke-width="0.5"/>
+        <text x="${s.x}" y="${s.y+70}" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#ef4444">envoy proxy</text>
+      `).join('')}
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <line x1="160" y1="100" x2="240" y2="100" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+      <text x="200" y="93" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#ec4899">mTLS</text>
+      <line x1="360" y1="100" x2="440" y2="100" stroke="#ec4899" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+      <text x="400" y="93" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#ec4899">mTLS</text>
+      <!-- Control plane -->
+      <rect x="150" y="155" width="300" height="25" rx="8" fill="#111318" stroke="rgba(255,255,255,0.1)" stroke-width="0.5"/>
+      <text x="300" y="172" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#888">Istio Control Plane (centralized policy & auth)</text>
+      ${[100,300,500].map(x=>`<line x1="${x}" y1="135" x2="${x}" y2="155" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" stroke-dasharray="3 2"/>`).join('')}
+    </svg>`,
+
+  terraformViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- HCL file -->
+      <rect x="25" y="35" width="160" height="130" rx="12" fill="#181b22" stroke="#ec4899" stroke-width="0.5"/>
+      <text x="105" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ec4899" font-weight="700">main.tf</text>
+      <text x="40" y="75" font-family="JetBrains Mono" font-size="8" fill="#7c3aed">resource</text><text x="85" y="75" font-family="JetBrains Mono" font-size="8" fill="#e8eaf0"> "aws_instance"</text>
+      <text x="40" y="90" font-family="JetBrains Mono" font-size="8" fill="#e8eaf0">  ami  = "ami-1234"</text>
+      <text x="40" y="105" font-family="JetBrains Mono" font-size="8" fill="#e8eaf0">  type = "t3.micro"</text>
+      <!-- Flow -->
+      ${[
+        {x:210, label:'Plan', icon:'📝', color:'#fbbf24'},
+        {x:340, label:'Apply', icon:'🚀', color:'#10b981'},
+        {x:470, label:'State', icon:'💾', color:'#6366f1'},
+      ].map((s,i,arr)=>`
+        <rect x="${s.x}" y="65" width="105" height="70" rx="12" fill="#181b22" stroke="${s.color}" stroke-width="1.5"/>
+        <text x="${s.x+52}" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="16">${s.icon}</text>
+        <text x="${s.x+52}" y="118" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="${s.color}" font-weight="700">${s.label}</text>
+        ${i<arr.length-1?`<line x1="${s.x+105}" y1="100" x2="${arr[i+1].x}" y2="100" stroke="${s.color}" stroke-width="1" marker-end="url(#arr)" class="anim-flow" opacity="0.4"/>`:''}
+      `).join('')}
+      <line x1="185" y1="100" x2="210" y2="100" stroke="#ec4899" stroke-width="1" marker-end="url(#arr)" class="anim-flow"/>
+      <text x="300" y="180" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">Declarative Infrastructure as Code (IaC)</text>
+    </svg>`,
+
+  ansibleViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Control node -->
+      <rect x="25" y="70" width="130" height="70" rx="12" fill="#181b22" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="90" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="16">🎛️</text>
+      <text x="90" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#f59e0b" font-weight="700">Control Node</text>
+      <text x="90" y="155" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">playbook.yml</text>
+      <!-- Inventories -->
+      ${[
+        {y:35, label:'Web Srv 1', ok:true},
+        {y:85, label:'Web Srv 2', ok:true},
+        {y:135, label:'DB Server', ok:false},
+      ].map(s=>`
+        <line x1="155" y1="105" x2="245" y2="${s.y+15}" stroke="#f59e0b" stroke-width="1" stroke-dasharray="3 2" opacity="0.4"/>
+        <rect x="255" y="${s.y}" width="150" height="40" rx="8" fill="#181b22" stroke="${s.ok?'#10b981':'#ef4444'}" stroke-width="0.5"/>
+        <text x="268" y="${s.y+24}" font-family="JetBrains Mono" font-size="9" fill="#e8eaf0">${s.label}</text>
+        <text x="390" y="${s.y+24}" text-anchor="end" font-family="JetBrains Mono" font-size="9" fill="${s.ok?'#10b981':'#ef4444'}">${s.ok?'✓':'✗'}</text>
+        <rect x="415" y="${s.y+5}" width="160" height="30" rx="5" fill="#111318" stroke="rgba(255,255,255,0.05)"/>
+        <text x="425" y="${s.y+23}" font-family="JetBrains Mono" font-size="8" fill="#888">ssh → apt-get install...</text>
+      `).join('')}
+    </svg>`,
+
+  obsViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      ${[
+        {x:15, color:'#00d4ff', title:'METRICS', icon:'📈', items:['CPU: 72%','RAM: 4.2GB','RPS: 1.4k','p99: 142ms']},
+        {x:210, color:'#10b981', title:'LOGS', icon:'📄', items:['200 OK /api','500 ER /db','204 NO /auth','101 UP /ws']},
+        {x:405, color:'#7c3aed', title:'TRACES', icon:'🔍', items:['api → auth','api → db!','db → disk','res: 840ms']},
+      ].map(col=>`
+        <rect x="${col.x}" y="30" width="180" height="150" rx="14" fill="#181b22" stroke="${col.color}" stroke-width="0.5"/>
+        <text x="${col.x+90}" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="16">${col.icon}</text>
+        <text x="${col.x+90}" y="75" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="${col.color}" font-weight="700" letter-spacing="1">${col.title}</text>
+        ${col.items.map((item,i)=>`
+          <rect x="${col.x+15}" y="${90+i*21}" width="150" height="18" rx="4" fill="#11131888" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+          <text x="${col.x+22}" y="${102+i*21}" font-family="JetBrains Mono" font-size="9" fill="#888">${item}</text>
+        `).join('')}
+      `).join('')}
+    </svg>`,
+
+  alertViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      ${[
+        {x:20, label:'Metrics', icon:'📈', color:'#fbbf24'},
+        {x:165, label:'Evaluator', icon:'🌡️', color:'#ef4444'},
+        {x:310, label:'Alertmanager', icon:'🚨', color:'#7c3aed'},
+        {x:455, label:'Receiver', icon:'📱', color:'#10b981'},
+      ].map((n,i,arr)=>`
+        <rect x="${n.x}" y="55" width="125" height="75" rx="12" fill="#181b22" stroke="${n.color}" stroke-width="1.5"/>
+        <text x="${n.x+62}" y="85" text-anchor="middle" font-family="JetBrains Mono" font-size="18">${n.icon}</text>
+        <text x="${n.x+62}" y="112" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="${n.color}" font-weight="700">${n.label}</text>
+        ${i<arr.length-1?`<line x1="${n.x+125}" y1="92" x2="${arr[i+1].x}" y2="92" stroke="${n.color}" stroke-width="1" marker-end="url(#arr)" class="anim-flow" opacity="0.4"/>`:''}
+      `).join('')}
+      <!-- Status -->
+      <rect x="20" y="150" width="560" height="30" rx="8" fill="#ef444415" stroke="#ef444433" stroke-width="0.5"/>
+      <text x="300" y="170" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#ef4444">CRITICAL: Error Rate > 5% → SMS/Slack sent to On-Call Engineer</text>
+    </svg>`,
+
+  iamViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Principals -->
+      <text x="85" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280" letter-spacing="1">PRINCIPALS</text>
+      ${[
+        {y:45, label:'Dev User', icon:'👤'},
+        {y:95, label:'EC2 Role', icon:'🖥️'},
+        {y:145, label:'Lambda Fn', icon:'λ'},
+      ].map(p=>`
+        <rect x="25" y="${p.y}" width="120" height="38" rx="8" fill="#181b22" stroke="#6366f1" stroke-width="0.5"/>
+        <text x="45" y="${p.y+24}" font-family="JetBrains Mono" font-size="14">${p.icon}</text>
+        <text x="68" y="${p.y+24}" font-family="JetBrains Mono" font-size="10" fill="#888">${p.label}</text>
+      `).join('')}
+      <!-- IAM engine -->
+      <rect x="220" y="70" width="150" height="80" rx="15" fill="#181b22" stroke="#6366f1" stroke-width="1.5"/>
+      <text x="295" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="18">🔑</text>
+      <text x="295" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#6366f1" font-weight="700">IAM Policy</text>
+      ${[45,95,145].map(y=>`<line x1="145" y1="${y+19}" x2="215" y2="110" stroke="#6366f1" stroke-width="1" marker-end="url(#arr)" opacity="0.3"/>`).join('')}
+      <!-- Resources -->
+      <text x="500" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280" letter-spacing="1">RESOURCES</text>
+      ${[
+        {y:45, label:'S3 Bucket', allowed:true},
+        {y:125, label:'DB Instant', allowed:false},
+      ].map(r=>`
+        <rect x="420" y="${r.y}" width="150" height="50" rx="10" fill="#181b22" stroke="${r.allowed?'#10b981':'#ef4444'}" stroke-width="0.5"/>
+        <text x="435" y="${r.y+20}" font-family="JetBrains Mono" font-size="10" fill="#e8eaf0">${r.label}</text>
+        <text x="435" y="${r.y+38}" font-family="JetBrains Mono" font-size="10" fill="${r.allowed?'#10b981':'#ef4444'}" font-weight="700">${r.allowed?'✓ ALLOW':'✗ DENY'}</text>
+        <line x1="370" y1="110" x2="415" y2="${r.y+25}" stroke="${r.allowed?'#10b981':'#ef4444'}" stroke-width="1.5" marker-end="url(#arr)" opacity="0.6"/>
+      `).join('')}
+    </svg>`,
+
+  secretsViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Anti-pattern -->
+      <rect x="25" y="30" width="220" height="60" rx="10" fill="#ef444408" stroke="#ef4444" stroke-width="0.5"/>
+      <text x="135" y="50" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ef4444" font-weight="700">❌ Anti-Pattern: Hardcoded</text>
+      <text x="40" y="70" font-family="JetBrains Mono" font-size="8" fill="#6b7280">DB_PASS="s3cr3t!" // Exposed in Code</text>
+      <!-- Best practice -->
+      <rect x="25" y="105" width="220" height="60" rx="10" fill="#10b98108" stroke="#10b981" stroke-width="0.5"/>
+      <text x="135" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#10b981" font-weight="700">✓ Best Practice: Dynamic Fetch</text>
+      <text x="40" y="145" font-family="JetBrains Mono" font-size="8" fill="#6b7280">vault.get("db/pass") // Runtime</text>
+      <!-- Secrets Manager -->
+      <rect x="300" y="55" width="160" height="90" rx="15" fill="#181b22" stroke="#f59e0b" stroke-width="1.5"/>
+      <text x="380" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="20">🗝️</text>
+      <text x="380" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#f59e0b" font-weight="700">Secrets Manager</text>
+      <text x="380" y="132" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">AES-256 Encrypted</text>
+      <line x1="245" y1="135" x2="295" y2="115" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+      <!-- Rotation -->
+      <rect x="485" y="65" width="90" height="70" rx="10" fill="#181b22" stroke="#6366f1" stroke-width="0.5"/>
+      <text x="530" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="16">🔄</text>
+      <text x="530" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6366f1">Auto-Rotate</text>
+    </svg>`,
+
+  serverlessViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Events -->
+      <text x="75" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280" letter-spacing="1">TRIGGERS</text>
+      ${[
+        {y:45, label:'HTTP Req', icon:'🌐'},
+        {y:95, label:'S/3 Upload', icon:'📁'},
+        {y:145, label:'Timer', icon:'⏰'},
+      ].map(e=>`
+        <rect x="25" y="${e.y}" width="110" height="38" rx="8" fill="#181b22" stroke="rgba(251,191,36,0.3)" stroke-width="0.5"/>
+        <text x="40" y="${e.y+24}" font-family="JetBrains Mono" font-size="14">${e.icon}</text>
+        <text x="60" y="${e.y+24}" font-family="JetBrains Mono" font-size="9" fill="#888">${e.label}</text>
+        <line x1="135" y1="${e.y+19}" x2="205" y2="105" stroke="#fbbf24" stroke-width="0.8" marker-end="url(#arr)" opacity="0.4"/>
+      `).join('')}
+      <!-- Compute -->
+      <circle cx="300" cy="105" r="50" fill="rgba(251,191,36,0.05)" stroke="#fbbf24" stroke-width="1.5" stroke-dasharray="4 2"/>
+      <text x="300" y="120" text-anchor="middle" font-family="JetBrains Mono" font-size="45" fill="#fbbf24" font-weight="100">λ</text>
+      <!-- Scale -->
+      ${[0,1,2].map(i=>`
+        <rect x="385" y="${40+i*48}" width="180" height="36" rx="8" fill="#181b22" stroke="#fbbf24" stroke-width="0.5" opacity="${1-i*0.2}" class="anim-pulse"/>
+        <text x="405" y="${63+i*48}" font-family="JetBrains Mono" font-size="9" fill="#fbbf24">Executing Container ${i+1}</text>
+      `).join('')}
+      <line x1="350" y1="105" x2="380" y2="105" stroke="#fbbf24" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+    </svg>`,
+
+  microViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Entry -->
+      <rect x="25" y="80" width="100" height="45" rx="10" fill="#181b22" stroke="#00d4ff" stroke-width="0.5"/>
+      <text x="75" y="106" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00d4ff" font-weight="700">API Gateway</text>
+      <!-- Services -->
+      ${[
+        {x:180, y:25, label:'Auth Service', sub:'v2.1', icon:'🔑', color:'#7c3aed'},
+        {x:180, y:80, label:'Order Service', sub:'v1.4', icon:'🛒', color:'#10b981'},
+        {x:180, y:135, label:'Pay Service', sub:'v3.0', icon:'💳', color:'#ef4444'},
+      ].map(s=>`
+        <rect x="${s.x}" y="${s.y}" width="150" height="45" rx="10" fill="#181b22" stroke="${s.color}" stroke-width="0.5"/>
+        <text x="${s.x+20}" y="${s.y+28}" font-family="JetBrains Mono" font-size="14">${s.icon}</text>
+        <text x="${s.x+45}" y="${s.y+28}" font-family="JetBrains Mono" font-size="9" fill="${s.color}">${s.label}</text>
+        <text x="${s.x+135}" y="${s.y+28}" font-family="JetBrains Mono" font-size="8" fill="#6b7280" text-anchor="end">${s.sub}</text>
+        <line x1="125" y1="102" x2="${s.x-5}" y2="${s.y+22}" stroke="#6b7280" stroke-width="0.5" marker-end="url(#arr)" opacity="0.3"/>
+      `).join('')}
+      <!-- DBs -->
+      ${[25,80,135].map((y,i)=>`
+        <rect x="440" y="${y}" width="100" height="45" rx="10" fill="#181b22" stroke="#6b7280" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <text x="490" y="${y+28}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">DB Instance ${i+1}</text>
+        <line x1="330" y1="${y+22}" x2="435" y2="${y+22}" stroke="#6b7280" stroke-width="0.8" marker-end="url(#arr)" class="anim-flow"/>
+      `).join('')}
+      <text x="300" y="192" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">Independent Scaling & Decentralized Data</text>
+    </svg>`,
+
+  edaViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Producer -->
+      <rect x="25" y="70" width="130" height="60" rx="12" fill="#181b22" stroke="#00d4ff" stroke-width="1.5"/>
+      <text x="90" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#00d4ff" font-weight="700">Producer</text>
+      <text x="90" y="112" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">Topic: "orders"</text>
+      <line x1="155" y1="100" x2="205" y2="100" stroke="#00d4ff" stroke-width="1" marker-end="url(#arr)" class="anim-flow"/>
+      <!-- Stream -->
+      <rect x="210" y="60" width="180" height="80" rx="10" fill="#111318" stroke="#fbbf24" stroke-width="0.5" stroke-dasharray="5 3"/>
+      <text x="300" y="130" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#fbbf24" letter-spacing="1">EVENT STREAM</text>
+      ${[0,1,2].map(i=>`
+        <rect x="${220+i*52}" y="75" width="45" height="30" rx="4" fill="#fbbf2415" stroke="#fbbf24" stroke-width="0.5" class="anim-flow"/>
+        <text x="${242+i*52}" y="94" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#fbbf24">#{${i}}</text>
+      `).join('')}
+      <!-- Consumers -->
+      ${[
+        {y:30, label:'Inventory', color:'#10b981'},
+        {y:80, label:'Shipping', color:'#7c3aed'},
+        {y:130, label:'Analytics', color:'#ef4444'},
+      ].map(c=>`
+        <rect x="430" y="${c.y}" width="145" height="40" rx="10" fill="#181b22" stroke="${c.color}" stroke-width="0.5"/>
+        <text x="445" y="${c.y+24}" font-family="JetBrains Mono" font-size="9" fill="${c.color}">${c.label} Srv</text>
+        <line x1="390" y1="100" x2="425" y2="${c.y+20}" stroke="#fbbf24" stroke-width="0.8" marker-end="url(#arr)" opacity="0.4"/>
+      `).join('')}
+    </svg>`,
+
+  s3Viz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Sources -->
+      <text x="85" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280" letter-spacing="1">SOURCES</text>
+      ${[
+        {y:45, label:'Mobile App', icon:'📱'},
+        {y:95, label:'Web UI', icon:'🌍'},
+        {y:145, label:'EC2 Logs', icon:'📜'},
+      ].map(s=>`
+        <rect x="25" y="${s.y}" width="120" height="38" rx="8" fill="#181b22" stroke="rgba(56,189,248,0.3)" stroke-width="0.5"/>
+        <text x="45" y="${s.y+24}" font-family="JetBrains Mono" font-size="14">${s.icon}</text>
+        <text x="68" y="${s.y+24}" font-family="JetBrains Mono" font-size="9" fill="#888">${s.label}</text>
+        <line x1="145" y1="${s.y+19}" x2="225" y2="105" stroke="#38bdf8" stroke-width="0.8" marker-end="url(#arr)" opacity="0.4"/>
+      `).join('')}
+      <!-- S3 Bucket -->
+      <path d="M240,70 Q240,40 290,40 L370,40 Q420,40 420,70 L420,130 Q420,160 370,160 L290,160 Q240,160 240,130 Z" fill="rgba(56,189,248,0.05)" stroke="#38bdf8" stroke-width="1.5"/>
+      <text x="330" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="20">📦</text>
+      <text x="330" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="12" fill="#38bdf8" font-weight="700">S3 BUCKET</text>
+      <text x="330" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">/static/assets/*</text>
+      <!-- Replicas -->
+      <rect x="475" y="40" width="100" height="130" rx="10" fill="#181b22" stroke="rgba(16,185,129,0.3)" stroke-width="0.5" stroke-dasharray="4 2"/>
+      <text x="525" y="60" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#10b981">REPLICATED</text>
+      ${[75,98,121,144].map(y=>`<rect x="490" y="${y}" width="70" height="15" rx="3" fill="rgba(16,185,129,0.15)" class="anim-pulse"/>`).join('')}
+      <line x1="420" y1="100" x2="470" y2="100" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+    </svg>`,
+
+  dbViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Primary -->
+      <rect x="30" y="45" width="180" height="110" rx="15" fill="#181b22" stroke="#00d4ff" stroke-width="1.5"/>
+      <text x="120" y="80" text-anchor="middle" font-family="JetBrains Mono" font-size="18">🗄️</text>
+      <text x="120" y="105" text-anchor="middle" font-family="JetBrains Mono" font-size="11" fill="#00d4ff" font-weight="700">PRIMARY (W/R)</text>
+      <text x="120" y="125" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#10b981">Multi-AZ Master</text>
+      <!-- Flow -->
+      <line x1="210" y1="100" x2="275" y2="100" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+      <text x="242" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">Async Sync</text>
+      <!-- Replicas -->
+      ${[40,110].map((y,i)=>`
+        <rect x="285" y="${y}" width="160" height="55" rx="10" fill="#181b22" stroke="rgba(0,212,255,0.4)" stroke-width="0.5"/>
+        <text x="365" y="${y+34}" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="#888">Read Replica ${i+1}</text>
+      `).join('')}
+      <!-- Standby -->
+      <rect x="465" y="65" width="110" height="70" rx="12" fill="#181b22" stroke="#ef4444" stroke-width="0.5" stroke-dasharray="4 3"/>
+      <text x="520" y="95" text-anchor="middle" font-family="JetBrains Mono" font-size="16">🛡️</text>
+      <text x="520" y="115" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ef4444">Hot Standby</text>
+      <text x="300" y="185" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">High Availability: Automated Failover & Read Scaling</text>
+    </svg>`,
+
+  finopsViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Spending -->
+      <text x="110" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#ef4444" font-weight="700">UNOPTIMIZED SPEND</text>
+      <rect x="35" y="45" width="150" height="110" rx="12" fill="#ef444405" stroke="#ef4444" stroke-width="0.5"/>
+      ${[70, 50, 90, 40].map((h, i) => `<rect x="${55+i*32}" y="${155-h}" width="20" height="${h}" fill="#ef4444" opacity="0.6"/>`).join('')}
+      <!-- Logic -->
+      <line x1="195" y1="100" x2="255" y2="100" stroke="#10b981" stroke-width="1.5" marker-end="url(#arr)" class="anim-flow"/>
+      <text x="225" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">Right-size</text>
+      <!-- Result -->
+      <text x="340" y="30" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#10b981" font-weight="700">FINOPS RESULT</text>
+      <rect x="265" y="45" width="150" height="110" rx="12" fill="#10b98105" stroke="#10b981" stroke-width="0.5"/>
+      ${[30, 35, 28, 32].map((h, i) => `<rect x="${285+i*32}" y="${155-h}" width="20" height="${h}" fill="#10b981" opacity="0.6"/>`).join('')}
+      <!-- Discount cards -->
+      ${[
+        {y:45, label:'Reserved Inst.', color:'#fbbf24'},
+        {y:105, label:'Spot Instances', color:'#fbbf24'},
+      ].map(t=>`
+        <rect x="435" y="${t.y}" width="135" height="50" rx="10" fill="#181b22" stroke="${t.color}" stroke-width="0.5"/>
+        <text x="502" y="${t.y+22}" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="${t.color}">${t.label}</text>
+        <text x="502" y="${t.y+38}" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#888">Save up to 90%</text>
+      `).join('')}
+    </svg>`,
+
+  drViz: () => `
+    <svg width="100%" viewBox="0 0 600 200" style="padding:10px">
+      <defs><marker id="arr" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M2 1L8 5L2 9" fill="none" stroke="context-stroke" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker></defs>
+      <!-- Regions -->
+      ${[
+        {x:25, label:'Region A (Primary)', icon:'❌', color:'#00d4ff', status:'Outage Detect'},
+        {x:345, label:'Region B (Secondary)', icon:'✓', color:'#10b981', status:'Active Standby'},
+      ].map(r=>`
+        <rect x="${r.x}" y="35" width="230" height="130" rx="15" fill="#181b22" stroke="${r.color}" stroke-width="1"/>
+        <text x="${r.x+115}" y="55" text-anchor="middle" font-family="JetBrains Mono" font-size="10" fill="${r.color}" font-weight="700">${r.label}</text>
+        <text x="${r.x+115}" y="100" text-anchor="middle" font-family="JetBrains Mono" font-size="40" opacity="0.3">${r.icon}</text>
+        <rect x="${r.x+20}" y="115" width="190" height="30" rx="8" fill="#111318" stroke="rgba(255,255,255,0.05)"/>
+        <text x="${r.x+115}" y="135" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#888">${r.status}</text>
+      `).join('')}
+      <!-- Sync -->
+      <line x1="260" y1="100" x2="340" y2="100" stroke="#fbbf24" stroke-width="1" marker-end="url(#arr)" stroke-dasharray="4 2" class="anim-flow"/>
+      <text x="300" y="90" text-anchor="middle" font-family="JetBrains Mono" font-size="8" fill="#6b7280">Syncing...</text>
+      <text x="300" y="185" text-anchor="middle" font-family="JetBrains Mono" font-size="9" fill="#6b7280">Multi-Region Disaster Recovery & Failover Automation</text>
+    </svg>`,
+};
+
+let activeCategory = categories[0].id;
+let activeConcept = null;
+let adventureMode = false;
+let completedConcepts = JSON.parse(localStorage.getItem('cloud_explorer_completed') || '[]');
+let xp = parseInt(localStorage.getItem('cloud_explorer_xp') || '0');
+
+function init() {
+  renderTabs();
+  renderConceptList();
+  setupAdventureMode();
+  updateExpDisplay();
+}
+
+function setupAdventureMode() {
+  const toggle = document.getElementById('adventureToggle');
+  const status = document.getElementById('advStatus');
+  const banner = document.getElementById('progressBanner');
+  
+  toggle.addEventListener('click', () => {
+    adventureMode = !adventureMode;
+    toggle.classList.toggle('active', adventureMode);
+    status.innerText = adventureMode ? 'ON' : 'OFF';
+    banner.style.display = adventureMode ? 'block' : 'none';
+    renderConceptList();
+    if (activeConcept) selectConcept(activeConcept);
+    
+    if (adventureMode) {
+      updateProgressBar();
+    }
+  });
+}
+
+function updateExpDisplay() {
+  const display = document.getElementById('expDisplay');
+  const level = Math.floor(xp / 100) + 1;
+  const rank = level < 3 ? 'NOVICE' : level < 6 ? 'PRACTITIONER' : 'ARCHITECT';
+  display.innerText = `LVL ${level}: ${rank} (${xp} XP)`;
+  localStorage.setItem('cloud_explorer_xp', xp);
+}
+
+function updateProgressBar() {
+  const total = categories.reduce((sum, cat) => sum + cat.concepts.length, 0);
+  const done = completedConcepts.length;
+  const percent = Math.round((done / total) * 100);
+  document.getElementById('progressBar').style.width = percent + '%';
+  document.getElementById('progressPercent').innerText = percent + '%';
+}
+
+function renderTabs() {
+  const container = document.getElementById('tabs');
+  container.innerHTML = categories.map(cat => `
+    <button class="tab-btn ${cat.id === activeCategory ? 'active' : ''}"
+      style="${cat.id === activeCategory ? `--active-color: ${cat.color}` : ''}"
+      onclick="selectCategory('${cat.id}')">
+      <span class="tab-dot" style="${cat.id === activeCategory ? '' : `background: ${cat.color}; opacity: 0.5`}"></span>
+      ${cat.icon} ${cat.name}
+    </button>
+  `).join('');
+}
+
+function renderConceptList() {
+  const cat = categories.find(c => c.id === activeCategory);
+  const container = document.getElementById('conceptList');
+  container.innerHTML = cat.concepts.map(concept => {
+    const isCompleted = completedConcepts.includes(concept.id);
+    return `
+      <div class="concept-item ${activeConcept === concept.id ? 'active' : ''} ${isCompleted ? 'completed' : ''}"
+        style="--item-color: ${cat.color}"
+        onclick="selectConcept('${concept.id}')">
+        ${adventureMode ? `<div class="completion-check">${isCompleted ? '✓' : ''}</div>` : `<div class="concept-icon">${concept.icon}</div>`}
+        <div class="concept-meta">
+          <div class="concept-name">${concept.name}</div>
+          <div class="concept-brief">${concept.brief}</div>
+        </div>
+        <div class="concept-actions">
+          <button class="viz-trigger-btn" onclick="event.stopPropagation(); selectConcept('${concept.id}')">
+            VIZ <span>→</span>
+          </button>
+        </div>
+        <div class="concept-level level-${concept.level}">${concept.level === 'b' ? 'Beginner' : concept.level === 'i' ? 'Inter.' : 'Advanced'}</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function selectCategory(id) {
+  activeCategory = id;
+  activeConcept = null;
+  renderTabs();
+  renderConceptList();
+  
+  const indicator = window.innerWidth <= 900 ? '↓' : '←';
+  document.getElementById('detailPanel').innerHTML = `
+    <div class="empty-state">
+      <div class="big-icon">⛅</div>
+      <p>${indicator} Select a concept to explore</p>
+    </div>`;
+    
+  if (window.innerWidth <= 900) {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+}
+
+function selectConcept(id) {
+  const cat = categories.find(c => c.id === activeCategory);
+  const concept = cat.concepts.find(c => c.id === id);
+  if (!concept) return;
+  activeConcept = id;
+  renderConceptList();
+  renderDetail(concept, cat.color);
+  
+  if (window.innerWidth <= 900) {
+    const detail = document.getElementById('detailPanel');
+    const offset = detail.getBoundingClientRect().top + window.pageYOffset - 70;
+    window.scrollTo({ top: offset, behavior: 'smooth' });
+  }
+}
+
+function renderDetail(concept, color) {
+  const levelMap = {b: {label:'Beginner', cls:'level-b'}, i: {label:'Intermediate', cls:'level-i'}, a: {label:'Advanced', cls:'level-a'}};
+  const lv = levelMap[concept.level];
+  const vizHtml = vizFunctions[concept.viz] ? vizFunctions[concept.viz]() : '';
+  const isCompleted = completedConcepts.includes(concept.id);
+
+  let challengeHtml = '';
+  if (adventureMode && concept.challenge) {
+    challengeHtml = `
+      <div class="challenge-section" id="challengeSection">
+        <div class="challenge-header">
+          <div class="logo-icon" style="background: ${color}; width: 24px; height: 24px; font-size: 12px;">🎯</div>
+          <div class="challenge-title">Adventure Challenge</div>
+        </div>
+        <div class="challenge-content">
+          ${concept.challenge.question}
+        </div>
+        <div class="quiz-options">
+          ${concept.challenge.options.map((opt, i) => `
+            <div class="quiz-option" onclick="checkAnswer(this, ${i}, ${concept.challenge.answer}, '${concept.id}')">
+              ${opt}
+            </div>
+          `).join('')}
+        </div>
+        <div id="challengeFeedback" style="margin-top: 15px; font-size: 12px; font-family: var(--mono);"></div>
+        ${isCompleted ? `<button class="complete-module-btn done">✓ MODULE MASTERED (+10 XP)</button>` : ''}
+      </div>
+    `;
+  }
+
+  document.getElementById('detailPanel').innerHTML = `
+    <div class="detail-header">
+      <div class="detail-category" style="--cat-color: ${color}">${concept.category}</div>
+      <div class="detail-title">
+        <span class="detail-icon" style="filter: drop-shadow(0 0 12px ${color}66)">${concept.icon}</span>
+        ${concept.name}
+        <span class="concept-level ${lv.cls}" style="font-size:11px">${lv.label}</span>
+      </div>
+      <div class="detail-subtitle">${concept.brief}</div>
+    </div>
+    <div class="detail-body">
+      <div class="viz-area" id="vizArea" style="--cat-color: ${color}">
+        <div class="viz-label">interactive simulation</div>
+        <div class="viz-controls">
+          <button class="viz-btn" onclick="replayViz('${concept.id}')" title="Replay Animation">🔄</button>
+          <button class="viz-btn" onclick="toggleVizGlow()" title="Toggle Glow">✨</button>
+        </div>
+        <div id="vizContent" style="width:100%; display:flex; align-items:center; justify-content:center;">
+          ${vizHtml}
+        </div>
+      </div>
+      <div class="explanation">
+        <h3 style="--cat-color: ${color}; display: flex; align-items: center; gap: 10px;">
+          <span style="width: 4px; height: 16px; background: ${color}; border-radius: 2px;"></span>
+          Core Concept
+        </h3>
+        <p>${concept.desc}</p>
+      </div>
+      <div class="explanation">
+        <h3 style="--cat-color: ${color}; display: flex; align-items: center; gap: 10px;">
+          <span style="width: 4px; height: 16px; background: ${color}; border-radius: 2px;"></span>
+          Deep Dive Points
+        </h3>
+        <div class="key-points" style="--cat-color: ${color}">
+          ${concept.points.map(p => `<div class="key-point">${p}</div>`).join('')}
+        </div>
+      </div>
+      <div class="explanation">
+        <h3 style="--cat-color: ${color}; display: flex; align-items: center; gap: 10px;">
+          <span style="width: 4px; height: 16px; background: ${color}; border-radius: 2px;"></span>
+          Ecosystem Tools
+        </h3>
+        <div class="tools-strip">
+          ${concept.tools.map(t => `<span class="tool-tag" style="border-color: ${color}22; background: ${color}08">${t}</span>`).join('')}
+        </div>
+      </div>
+      ${challengeHtml}
+    </div>`;
+}
+
+function checkAnswer(el, selected, correct, conceptId) {
+  if (completedConcepts.includes(conceptId)) return;
+  
+  const options = el.parentElement.querySelectorAll('.quiz-option');
+  options.forEach(opt => opt.classList.remove('correct', 'wrong'));
+  
+  if (selected === correct) {
+    el.classList.add('correct');
+    document.getElementById('challengeFeedback').innerHTML = `<span style="color: var(--accent3)">Correct! Achievement unlocked.</span>`;
+    markComplete(conceptId);
+  } else {
+    el.classList.add('wrong');
+    document.getElementById('challengeFeedback').innerHTML = `<span style="color: var(--accent5)">Almost! Try again.</span>`;
+  }
+}
+
+function markComplete(id) {
+  if (!completedConcepts.includes(id)) {
+    completedConcepts.push(id);
+    localStorage.setItem('cloud_explorer_completed', JSON.stringify(completedConcepts));
+    xp += 10;
+    updateExpDisplay();
+    updateProgressBar();
+    
+    // Add completion button
+    const section = document.getElementById('challengeSection');
+    const existingBtn = section.querySelector('.complete-module-btn');
+    if (!existingBtn) {
+      const btn = document.createElement('button');
+      btn.className = 'complete-module-btn';
+      btn.innerText = '✓ MODULE MASTERED (+10 XP)';
+      section.appendChild(btn);
+    }
+    
+    // Refresh list for checkmark
+    renderConceptList();
+  }
+}
+
+function replayViz(id) {
+  const cat = categories.find(c => c.concepts.find(v => v.id === activeConcept));
+  const concept = cat.concepts.find(c => c.id === activeConcept);
+  const vizContent = document.getElementById('vizContent');
+  vizContent.innerHTML = '';
+  setTimeout(() => {
+    vizContent.innerHTML = vizFunctions[concept.viz]();
+  }, 10);
+}
+
+let glowEnabled = true;
+function toggleVizGlow() {
+  glowEnabled = !glowEnabled;
+  const vizArea = document.getElementById('vizArea');
+  vizArea.style.boxShadow = glowEnabled 
+    ? `0 12px 48px rgba(0,0,0,0.6), 0 0 20px -10px var(--cat-color)`
+    : `0 8px 32px rgba(0,0,0,0.4)`;
+}
+
+init();
+</script>
+</body>
+</html>
